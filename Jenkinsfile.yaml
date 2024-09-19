@@ -1,0 +1,6 @@
+sonarArgs: "-Dsonar.host.url=http://sonarqube/sonarqube -Dsonar.login=1c99b4cb9edfe4d325af351f5264a99f7536edef"
+pathKubernetes: 'k8s/obl-his-ms-agrupacion-empledaor-azr-java-deployment.yaml'
+project: "ns-obligatorias-historialaboral-plan-c"
+artifactName: 'obl-his-ms-agrupacion-empledaor-azr-java'
+replicasDev: 1
+replicasPrd: 1

@@ -1,0 +1,69 @@
+openapi: 3.0.1
+info:
+  title: Servicio obl-his-ms-agrupacion-empledaor-azr-java
+  description: Descripcion del servicio
+  version: 1.0.0
+  contact:
+    name: Team Tech Comunidad Digital Comercial
+    url: teamtechCDC@porvenir.com.co
+servers:
+  - url: https://apiceppt.afpporvenir.com/cdc/general/v1/
+    description: Generated server url
+paths:
+  /api-health/ping:
+    get:
+      tags:
+        - health-controller
+      summary: example responseEntity body and dependency resilence4J
+      operationId: ping
+      parameters:
+        - name: X-RqUID
+          in: header
+          description: Header X-RqUID Id de request para efectos de traza y correlacion de transacciones
+          schema:
+            type: string
+        - name: X-Channel
+          in: header
+          description: Header X-Channel canal desde donde se consume el servicio
+          schema:
+            type: string
+        - name: X-IdentSerialNum
+          in: header
+          description: Header X-IdentSerialNum numero identificacion del afiliado para efectos de traza
+          schema:
+            type: string
+        - name: X-GovIssueIdentType
+          in: header
+          description: Header X-GovIssueIdentType tipo de identificacion del afiliado para efectos de traza
+          schema:
+            type: string
+        - name: X-IPAddr
+          in: header
+          description: Header X-IPAddr Ip desde donde se consume el servicio para efecto de trazas
+          schema:
+            type: string
+        - name: X-CompanyId
+          in: header
+          description: Header X-CompanyId Nombre o identificador de la compañia que realiza el consumo del servicio
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseStatusServiceDto'
+components:
+  schemas:
+    ResponseStatusServiceDto:
+      type: object
+      properties:
+        status:
+          type: string
+        appName:
+          type: string
+        version:
+          type: string
+        buildDate:
+          type: string

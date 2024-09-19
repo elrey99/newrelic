@@ -1,0 +1,255 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: obl-his-ms-agrupacion-empledaor-azr-java-deployment
+  namespace: ns-obligatorias-historialaboral
+  labels:
+    app: obl-his-ms-agrupacion-empledaor-azr-java-deployment
+    domain: HistoriaLaboral
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: obl-his-ms-agrupacion-empledaor-azr-java-deployment
+  template:
+    metadata:
+      labels:
+        app: obl-his-ms-agrupacion-empledaor-azr-java-deployment
+        domain: HistoriaLaboral
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: "topology.kubernetes.io/zone"
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: tra-seg-ms-generar-otp-java-deployment
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: azuspccdckv
+        - name: configmap-vol # config update
+          configMap:
+            name: ms-obligatorias-configmap # termina
+      hostAliases:
+        - ip: "172.17.21.30"
+          hostnames:
+            - "tal1055vip"
+        - ip: "172.17.21.31"
+          hostnames:
+            - "tal1059vip"
+        - ip: "172.17.21.158"
+          hostnames:
+            - "tal1097vip"
+        - ip: "172.17.21.159"
+          hostnames:
+            - "tal1098vip"
+        - ip: "172.17.9.66"
+          hostnames:
+            - "prdracdbp"
+        - ip: "172.17.9.67"
+          hostnames:
+            - "prdracdbp"
+        - ip: "172.17.9.68"
+          hostnames:
+            - "prdracdbp"
+        - ip: "172.17.9.69"
+          hostnames:
+            - "pal2246vip"
+        - ip: "172.17.9.179"
+          hostnames:
+            - "pal2247vip"
+        - ip: "172.17.9.72"
+          hostnames:
+            - "pal2246"
+        - ip: "172.17.9.73"
+          hostnames:
+            - "pal2247"
+      containers:
+        - name: obl-his-ms-agrupacion-empledaor-azr-java-deployment
+          image: azuepvgoydvpsptacr.azurecr.io/NAME_ARTIFACT:VERSION
+          volumeMounts:
+            - name: secrets-store
+              mountPath: '/mnt/secrets-store'
+              readOnly: true
+            - name: configmap-vol  # volumen config
+              mountPath: '/config'  # ruta de almacen
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 600m
+              memory: 600Mi
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              port: 8080
+              path: /service/obligatorias/historialaboral/agrupacionempleadorobl/actuator/health/readiness
+            initialDelaySeconds: 70
+            failureThreshold: 20
+            periodSeconds: 20
+            timeoutSeconds: 10
+          livenessProbe:
+            httpGet:
+              port: 8080
+              path: /service/obligatorias/historialaboral/agrupacionempleadorobl/actuator/health/liveness
+            initialDelaySeconds: 75
+            periodSeconds: 30
+            failureThreshold: 20
+            timeoutSeconds: 10
+          env:
+            - name: ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: env
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: port
+            - name: APPVER
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: appver
+            - name: VERDATE
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: verdate
+            - name: DATABASEURL
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: url_database
+            - name: DATABASEUSER
+              valueFrom:
+                secretKeyRef:
+                  name: bd-dbporve-username-reader
+                  key: BD-DBPORVE-USERNAME-READER
+            - name: DATABASEPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bd-dbporve-password-reader
+                  key: BD-DBPORVE-PASSWORD-READER
+            - name: DATABASEDRIVER
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: database_driver
+            - name: DATABASEPOOLSIZE
+              value: '1'
+            - name: DATABASETIMEOUT
+              value: '5'
+            - name: ACTIVE_LOG
+              value: 'false'
+            - name: END_POINT_WS_LOG
+              value: 'https://secureapicdcpt.afpporvenir.com/cdc/general/v1/eventos/trace/'
+            - name: CORS
+              value: '*'
+            - name: RUTA
+              value: '/service/obligatorias/historialaboral/agrupacionempleadorobl'
+            - name: APIDOCSENABLE
+              value: 'true'
+            - name: SWAGGERENABLE
+              value: 'true'
+            - name: APIDOCS
+              value: '/api-docs'
+            - name: SWAGGER
+              value: '/swagger-ui.html'
+            - name: DETALLE_SEMANA_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: url_detalle_semanas
+            - name: EVENT_HUB_QUEUE
+              valueFrom:
+                configMapKeyRef:
+                  name: logstash-configmap
+                  key: ent-hub-connection-queue
+            - name: CONSUMER_GROUP
+              valueFrom:
+                configMapKeyRef:
+                  name: logstash-configmap
+                  key: consumer-group
+            - name: EVENT_HUB_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: logstash-configmap
+                  key: ent-hub-endpoint
+            - name: EVENT_HUB_CONNECTION_S
+              valueFrom:
+                configMapKeyRef:
+                  name: logstash-configmap
+                  key: ent-hub-connections
+            - name: STORAGE_CONNECTION
+              valueFrom:
+                configMapKeyRef:
+                  name: logstash-configmap
+                  key: storage-connection
+            - name: LOG_SPRING_JMS_LISTENER_RECEIVE_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: logstash-configmap
+                  key: log-spring-jms-listener-receive-timeout
+            - name: LOG_SPRING_JMS_SERVICEBUS_PRICING_TIER
+              valueFrom:
+                configMapKeyRef:
+                  name: logstash-configmap
+                  key: log-spring-jms-servicebus-pricing-tier
+            - name: LOG_SECRET_KEY_ENCRYPT_FIELDS
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: log-secret-key-encrypt-fields
+            - name: LOG_NO_DOFILTER_EXECUTION
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: log-no-dofilter-execution
+            - name: LOG_LOGGING_FILTER_EXCLUDE
+              valueFrom:
+                configMapKeyRef:
+                  name: ms-obligatorias-configmap
+                  key: log-logging-filter-exclude
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  obl-his-ms-agrupacion-empledaor-azr-java-services
+  namespace: ns-obligatorias-historialaboral
+spec:
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: obl-his-ms-agrupacion-empledaor-azr-java-deployment
+---
+#hpa
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name:  obl-his-ms-agrupacion-empledaor-azr-java-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment # Puede ser también StatefulSet o ReplicaSet
+    name:  obl-his-ms-agrupacion-empledaor-azr-java-deployment
+  minReplicas: 1 #Min DE REPLICAS
+  maxReplicas: 5 #MAX DE REPLICAS
+  targetCPUUtilizationPercentage: 75 #PORCENTAJE DE CE CAPACIDAD PARA CRECER O APLICAR EL HPA
